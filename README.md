@@ -17,5 +17,6 @@ For more information about the project see:<br/>
 - Open the "Boards Manager" and install "esp32 by Espressive Systems version 2.0.14"
 - Use version 2.0.14 other versions may not work!
 - Use a USB data transfer kabel! Some cables are charge only!
+- Put your ESP32 board in serial bootloader mode by keeping the Flash/BOOT button pressed when powering up.
 - Install the driver for your ESP32 board if needed.
 - Select the correct Board, Settings and port for your ESP32 board and click upload.
