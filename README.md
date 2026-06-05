@@ -1,4 +1,4 @@
-# worc-robot-controller-esp8266
+# worc-robot-controller-esp32c3
 Firmware for the WORC Robot Controller based on the Espressif ESP32-C3 MCU and ESP-NOW protocol.
 For more information about the project see:<br/>
 (https://www.wallieonline.nl/blogs/esp-now-remote-control-mini-robots.html)
@@ -8,7 +8,7 @@ For more information about the project see:<br/>
 # Finding your robot-controller MAC address
 - Use readmac.ino on the robot-controller to retrieve the MAC address.
 - Save the MAC address.
-- Use the MAC address in the remote-controller project.
+- Use the MAC address in the espnow-transmitter project.
 
 # Programming the ESP32 remote-controller
 - Install the Arduino IDE software from the Arduino website.
