@@ -3,10 +3,14 @@ Firmware for the WORC Robot Controller based on the Espressif ESP32-C3 MCU and E
 For more information about the project see:<br/>
 (https://www.wallieonline.nl/blogs/esp-now-remote-control-mini-robots.html)
 
-Building instructions for the worc-esp32c3-drv8833 version: https://www.youtube.com/watch?v=jnXTLoNIQ_A
+Building instructions for the worc-esp32c3-drv8833 version:
+https://www.youtube.com/watch?v=jnXTLoNIQ_A
+
 ![WORC Robot Controller](https://img.youtube.com/vi/jnXTLoNIQ_A/hqdefault.jpg)
 
-Building instructions for the worc-esp32c3-tb6612fng version: https://www.youtube.com/watch?v=p5JXhyKQbI0
+Building instructions for the worc-esp32c3-tb6612fng version:
+https://www.youtube.com/watch?v=p5JXhyKQbI0
+
 ![WORC Robot Controller](https://img.youtube.com/vi/p5JXhyKQbI0/hqdefault.jpg)
 
 # Finding your robot-controller MAC address
