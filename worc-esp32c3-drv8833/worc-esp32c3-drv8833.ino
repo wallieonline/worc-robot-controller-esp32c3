@@ -1,6 +1,3 @@
-#define CONFIG_ESP32_WIFI_AMPDU_RX_ENABLED 0
-#define CONFIG_ESP32_WIFI_AMPDU_TX_ENABLED 0
-
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <WiFi.h>
@@ -92,6 +89,8 @@ void setup() {
   //old //WiFi.disconnect();
   esp_netif_init();
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+  cfg.ampdu_tx_enable = 0;
+  cfg.ampdu_rx_enable = 0;
   esp_wifi_init(&cfg);
   esp_wifi_set_mode(WIFI_MODE_STA);
   esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW_HT20);
