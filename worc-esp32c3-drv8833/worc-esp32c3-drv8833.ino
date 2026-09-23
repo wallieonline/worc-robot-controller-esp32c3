@@ -1,7 +1,7 @@
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <WiFi.h>
-#include <EEPROM.h>
+//#include <EEPROM.h>
 
 //Assign DRV8833 pins
 #define IN2A_OUT_PIN 6
@@ -60,7 +60,7 @@ int gMotorRight = 0;
 
 //callback function that will be executed when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
-  if (len != sizeof(gEspn)) return;   // ignore malformed/unknown packets
+  if (len != sizeof(gEspn)) return; //Ignore malformed packets
   memcpy(&gEspn, incomingData, sizeof(gEspn));
   gGotEspn = true;
   //Serial.print(gEspn.gAIL); Serial.print("  ");
@@ -80,6 +80,7 @@ void setup() {
   ledcAttachPin(IN1B_OUT_PIN, 2); //ESP only ledChannel = 2
   ledcAttachPin(IN2B_OUT_PIN, 3); //ESP only ledChannel = 3
   pinMode(STBY_OUT_PIN,OUTPUT);
+  pinMode(FLED_OUT_PIN,OUTPUT);
   delay(2000); //Wait till boot is complete
   digitalWrite(STBY_OUT_PIN,HIGH);
   
@@ -98,7 +99,7 @@ void setup() {
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
   esp_wifi_set_ps(WIFI_PS_NONE);
   esp_wifi_start();
-  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);   // lock the channel (1, 6, or 11 are the non-overlapping ones)
+  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE); //Lock the channel (1, 6, or 11 are the non-overlapping ones)
   
   //Init ESP-NOW
   if (esp_now_init() != 0) {
@@ -127,6 +128,7 @@ void loop() {
     if (gEspn.gAUX2) gRcAux2 = gEspn.gAUX2;
     if (gEspn.gAUX3) gRcAux3 = gEspn.gAUX3;
     if (gEspn.gAUX4) gRcAux4 = gEspn.gAUX4;
+    digitalWrite(FLED_OUT_PIN, HIGH); //Link ok LED solid on
   } else if (current_millis >= last_millis + 200) {
     unThrottleIn = RC_NEUTRAL;
     unSteeringIn = RC_NEUTRAL;
@@ -138,6 +140,7 @@ void loop() {
     gRcAux2 = RC_MIN;
     gRcAux3 = RC_MIN;
     gRcAux4 = RC_MIN;
+    digitalWrite(FLED_OUT_PIN, (current_millis / 250) % 2); //Failsafe LED blinking
   }
   
   if (gMode == MODE_PROGRAM_WALLIEONLINE) {
