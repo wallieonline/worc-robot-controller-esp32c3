@@ -63,6 +63,7 @@ int gMotorRight = 0;
 
 //callback function that will be executed when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  if (len != sizeof(gEspn)) return;   // ignore malformed/unknown packets
   memcpy(&gEspn, incomingData, sizeof(gEspn));
   gGotEspn = true;
   //Serial.print(gEspn.gAIL); Serial.print("  ");
