@@ -105,8 +105,9 @@ void setup() {
   
   //Init ESP-NOW
   if (esp_now_init() != 0) {
-    Serial.println("Error initializing ESP-NOW");
-    return;
+    Serial.println("Error initializing ESP-NOW, restarting...");
+    delay(1000);
+    ESP.restart();
   }
   esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_PHY_RATE_24M);
   esp_now_register_recv_cb(OnDataRecv);
