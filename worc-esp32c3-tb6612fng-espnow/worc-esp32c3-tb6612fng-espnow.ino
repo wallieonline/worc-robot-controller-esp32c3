@@ -1,15 +1,36 @@
+/*
+ * WORC Robot Controller - ESP32-C3 ESP-NOW Robot Controller
+ * Copyright (C) 2026 wallieonline
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <WiFi.h>
 //#include <EEPROM.h>
 
-//Assign DRV8833 pins
-#define IN2A_OUT_PIN 6
-#define IN1A_OUT_PIN 7
-#define STBY_OUT_PIN 5
-#define IN1B_OUT_PIN 9
-#define IN2B_OUT_PIN 10
-#define FLED_OUT_PIN 8
+//Assign TB6612FNG pins
+#define PWMA_OUT_PIN 6
+#define IN2A_OUT_PIN 7
+#define IN1A_OUT_PIN 8
+#define STBY_OUT_PIN 9
+#define IN1B_OUT_PIN 10
+#define IN2B_OUT_PIN 20
+#define PWMB_OUT_PIN 21
+//#define FLED_OUT_PIN 13 //Arduino only FLED is on pin 8
+//#define FVCC_OUT_PIN A1 //Arduino only FVCC is on 3.3v pin.
 
 //Assign ESPNOW channel struct
 typedef struct rc_data_t {
@@ -73,16 +94,15 @@ void setup() {
   Serial.begin(115200);
   ledcSetup(0, 5000, 8); //ESP only freq = 5000 ledChannel = 0 resolution = 8
   ledcSetup(1, 5000, 8); //ESP only freq = 5000 ledChannel = 1 resolution = 8
-  ledcSetup(2, 5000, 8); //ESP only freq = 5000 ledChannel = 2 resolution = 8
-  ledcSetup(3, 5000, 8); //ESP only freq = 5000 ledChannel = 3 resolution = 8
-  ledcAttachPin(IN1A_OUT_PIN, 0); //ESP only ledChannel = 0
-  ledcAttachPin(IN2A_OUT_PIN, 1); //ESP only ledChannel = 1
-  ledcAttachPin(IN1B_OUT_PIN, 2); //ESP only ledChannel = 2
-  ledcAttachPin(IN2B_OUT_PIN, 3); //ESP only ledChannel = 3
+  ledcAttachPin(PWMA_OUT_PIN, 0); //ESP only ledChannel = 0
+  ledcAttachPin(PWMB_OUT_PIN, 1); //ESP only ledChannel = 1
+  pinMode(IN2A_OUT_PIN,OUTPUT);
+  pinMode(IN1A_OUT_PIN,OUTPUT);
   pinMode(STBY_OUT_PIN,OUTPUT);
-  pinMode(FLED_OUT_PIN,OUTPUT);
+  pinMode(IN1B_OUT_PIN,OUTPUT);
+  pinMode(IN2B_OUT_PIN,OUTPUT);
   delay(2000); //Wait till boot is complete
-  digitalWrite(STBY_OUT_PIN,HIGH);
+  digitalWrite(STBY_OUT_PIN,HIGH); //STBY is a boot selector pin on ESP32 C3 on boot
   
   //Set device as a Wi-Fi Station
   //old //WiFi.enableLongRange(true);
@@ -128,7 +148,6 @@ void loop() {
     if (gEspn.gAUX2) gRcAux2 = gEspn.gAUX2;
     if (gEspn.gAUX3) gRcAux3 = gEspn.gAUX3;
     if (gEspn.gAUX4) gRcAux4 = gEspn.gAUX4;
-    digitalWrite(FLED_OUT_PIN, HIGH); //Link ok LED solid on
   } else if (current_millis >= last_millis + 200) {
     unThrottleIn = RC_NEUTRAL;
     unSteeringIn = RC_NEUTRAL;
@@ -140,7 +159,6 @@ void loop() {
     gRcAux2 = RC_MIN;
     gRcAux3 = RC_MIN;
     gRcAux4 = RC_MIN;
-    digitalWrite(FLED_OUT_PIN, (current_millis / 250) % 2); //Failsafe LED blinking
   }
   
   if (gMode == MODE_PROGRAM_WALLIEONLINE) {
@@ -163,29 +181,29 @@ void loop() {
       }
     }
     //Mix gThrottle and gSteering
-    gMotorLeft = constrain((gThrottle - gSteering),-255,255);
-    gMotorRight = constrain((gThrottle + gSteering),-255,255);
+    gMotorLeft = constrain((gThrottle + gSteering),-255,255);
+    gMotorRight = constrain((gThrottle - gSteering),-255,255);
     if (gMotorLeft > 0) { //DIRECTION_FORWARD
-      ledcWrite(0, LOW); //IN1A_OUT_PIN
-      ledcWrite(1, abs(gMotorLeft)); //IN2A_OUT_PIN
+      digitalWrite(IN1A_OUT_PIN,HIGH);
+      digitalWrite(IN2A_OUT_PIN,LOW);
     } else if (gMotorLeft < 0) { //DIRECTION_REVERSE
-      ledcWrite(0, abs(gMotorLeft)); //IN1A_OUT_PIN
-      ledcWrite(1, LOW); //IN2A_OUT_PIN
+      digitalWrite(IN1A_OUT_PIN,LOW);
+      digitalWrite(IN2A_OUT_PIN,HIGH);
     } else { //DIRECTION_STOP
-      ledcWrite(0, LOW); //IN1A_OUT_PIN
-      ledcWrite(1, LOW); //IN2A_OUT_PIN
+      digitalWrite(IN1A_OUT_PIN,LOW);
+      digitalWrite(IN2A_OUT_PIN,LOW);
     }
     if (gMotorRight > 0) { //DIRECTION_FORWARD
-      ledcWrite(2, LOW); //IN1B_OUT_PIN
-      ledcWrite(3, abs(gMotorRight)); //IN2B_OUT_PIN
-      //digitalWrite(IN1B_OUT_PIN,HIGH);
-      //digitalWrite(IN2B_OUT_PIN,LOW);
+      digitalWrite(IN1B_OUT_PIN,HIGH);
+      digitalWrite(IN2B_OUT_PIN,LOW);
     } else if (gMotorRight < 0) { //DIRECTION_REVERSE
-      ledcWrite(2, abs(gMotorRight)); //IN1B_OUT_PIN
-      ledcWrite(3, LOW); //IN2B_OUT_PIN
+      digitalWrite(IN1B_OUT_PIN,LOW);
+      digitalWrite(IN2B_OUT_PIN,HIGH);
     } else { //DIRECTION_STOP
-      ledcWrite(2, LOW); //IN1B_OUT_PIN
-      ledcWrite(3, LOW); //IN2B_OUT_PIN
+      digitalWrite(IN1B_OUT_PIN,LOW);
+      digitalWrite(IN2B_OUT_PIN,LOW);
     }
+     ledcWrite(0, abs(gMotorLeft));
+     ledcWrite(1, abs(gMotorRight));
   }
 }

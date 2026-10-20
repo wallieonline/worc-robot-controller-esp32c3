@@ -13,7 +13,7 @@ https://www.youtube.com/watch?v=p5JXhyKQbI0
 
 ![WORC Robot Controller](https://img.youtube.com/vi/p5JXhyKQbI0/hqdefault.jpg)
 
-# Finding your robot-controller MAC address
+# Finding your robot-controller MAC address (ESP-NOW Version)
 - Use readmac.ino on the robot-controller to retrieve the MAC address.
 - Save the MAC address.
 - Use the MAC address in the espnow-transmitter project.
