@@ -44,8 +44,7 @@ No code changes or MAC addresses needed — the controllers find each other auto
 2. Within 30 seconds, turn on the **remote**. Its LED also blinks while searching.
 3. When they find each other, the LEDs stay on — done! The remote now controls the robot.
 
-Want to use a different remote? Turn both off and on again.
-Only turn on one remote at a time while connecting.
+Want to use a different remote? Turn both off and on again. Only turn on one remote at a time while connecting.
 
 ## Using the web interface (webui version)
 
@@ -72,18 +71,19 @@ All firmware variants have the same built-in safety behavior:
 - While the link is lost, the onboard LED **blinks**; when the link is healthy it stays on.
 - This applies to every control method: a lost remote (ESP-NOW), a disconnected browser (WebUI), or a receiver failsafe / lost signal (RC protocols).
 
-## Flashing with the web flasher (no installation)
+## Flashing with the webflasher (no installation)
 
-The easiest way to install the firmware — no Arduino IDE needed:
+The easiest way to install the firmware, no Arduino IDE needed:
 
-1. Open the web flasher in **Chrome or Edge** (WebSerial is required): https://wallieonline.nl/blogs/worc-robot-controller-en.html
-2. Connect your ESP32-C3 board via USB (a data cable — some cables are charge only!).
-3. Click **Connect**, select the USB port, and choose the firmware variant for your motor driver and control method.
-4. Click **Flash** and wait until it finishes. Done!
+1. Open the webflasher in **Chrome or Edge** (WebSerial is required): https://wallieonline.nl/webflasher-en.html
+2. Choose your motor driver (**DRV8833** or **TB6612FNG**) and the firmware variant for your control method.
+3. Connect your ESP32-C3 board via USB (a data cable, some cables are charge only!).
+4. Click **Flash** next to your chosen firmware.
+5. In the popup from your browser, select the USB port and click **Connect**, then click **Install**. Keep the cable connected and this page open until it reaches 100% — done!
 
-More firmware versions will be added to the web flasher soon.
+More firmware versions will be added to the webflasher soon.
 
-*Tip: if flashing does not start, your board may need to be put in bootloader mode manually. Hold the BOOT button, briefly press RESET, then release BOOT and try again.*
+*Tip: if flashing does not start, your board may need to be put in bootloader mode manually. Keep the Flash/BOOT button pressed when powering up the board and try again.*
 
 ## Programming the ESP32-C3 with the Arduino IDE
 
@@ -99,12 +99,13 @@ More firmware versions will be added to the web flasher soon.
 
 ## License and attribution
 
-This program is free software licensed under GPLv3 (see LICENSE), with the following additional terms under Section 7 of the GPL:
+This program is free software licensed under GPLv3 only (GPL-3.0-only, see [LICENSE](LICENSE)), with additional terms under Section 7 of the GPL.
+The full text of these terms is in [NOTICE](NOTICE).
+In short:
 
-1. Attribution: If you distribute this software or a modified version, the credit "WORC Robot Controller — © 2026 wallieonline" with a link to https://github.com/wallieonline must be visibly included in the user interface (e.g. the web interface) or, if the software has no interface, in its documentation.
-   You may add your own credits, but may not remove or obscure the original attribution.
-
-2. Naming: Modified versions must use a distinct product name.
-   You may not distribute a modified version under the name "WORC" or otherwise present it as the original controller.
+1. **Attribution:** if you distribute this software or a modified version, the credit "WORC Robot Controller — © 2026 wallieonline" with a link to https://github.com/wallieonline must be visibly included in the user interface or, if there is none, in the documentation and the source code headers.
+   Do not remove or obscure the original copyright notices.
+2. **Naming:** modified versions must be clearly marked as modified and use a distinct product name.
+   The name "WORC" may not be used for modified versions.
 
 These terms apply in addition to all GPLv3 conditions, including the requirement to publish your corresponding source code.

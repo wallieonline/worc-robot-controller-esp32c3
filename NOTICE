@@ -1,0 +1,26 @@
+WORC Robot Controller
+Copyright (C) 2026 wallieonline (https://github.com/wallieonline)
+
+This program is licensed under the GNU General Public License,
+version 3 only (GPL-3.0-only, see LICENSE), with the following
+additional terms under Section 7 of the GPL:
+
+1. Attribution (GPL section 7(b)): If you distribute this software or a
+   modified version, the credit
+
+       "WORC Robot Controller - (c) 2026 wallieonline"
+
+   with a link to https://github.com/wallieonline must be visibly
+   included in the user interface (e.g. the web interface) or, if the
+   software has no user interface, in the accompanying documentation
+   (README) and in the source code header of every file.
+   You may add your own credits, but you may not remove or obscure
+   the original attribution or copyright notices.
+
+2. Naming (GPL section 7(c)/(e)): Modified versions must be marked as
+   such and must use a distinct product name. You may not distribute a
+   modified version under the name "WORC" or present it as the original
+   controller. No rights to the name "WORC" are granted.
+
+These terms apply in addition to all GPLv3 conditions, including the
+requirement to publish the corresponding source code.
