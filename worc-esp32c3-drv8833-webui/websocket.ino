@@ -137,7 +137,6 @@ bool parseWebSocketFrame(uint8_t* data, size_t len, String& message, size_t& con
   bool masked = (data[1] & 0x80) != 0;
   uint64_t payloadLen = data[1] & 0x7F;
   size_t headerLen = 2;
-  
   if (payloadLen == 126) {
     if (len < 4) return false;
     payloadLen = (data[2] << 8) | data[3];
@@ -148,21 +147,16 @@ bool parseWebSocketFrame(uint8_t* data, size_t len, String& message, size_t& con
     for (int i = 0; i < 8; i++) payloadLen = (payloadLen << 8) | data[2+i];
     headerLen = 10;
   }
-  
   uint8_t maskKey[4] = {0};
   if (masked) {
     if (len < headerLen + 4) return false;
     memcpy(maskKey, data + headerLen, 4);
     headerLen += 4;
   }
-  
   if (len < headerLen + payloadLen) return false; // Incomplete frame, wait for more data
-  
   consumed = headerLen + payloadLen;
-  
   if (opcode == 0x08) return false; // Close frame - caller should close connection
   if (opcode != 0x01 && opcode != 0x02) return true; // Control frame (e.g. ping/pong), nothing to do
-  
   for (uint64_t i = 0; i < payloadLen && i < 100; i++) {
     uint8_t byte = data[headerLen + i];
     if (masked) byte ^= maskKey[i % 4];
@@ -201,7 +195,6 @@ bool handleWebSocketHandshake(String& request) {
   if (keyEnd < 0) return false;
   String key = request.substring(keyStart, keyEnd);
   key.trim();
-  
   // Compute accept key: base64(sha1(key + magic))
   String combined = key + WS_MAGIC;
   MinimalSHA1 sha1;
@@ -210,13 +203,11 @@ bool handleWebSocketHandshake(String& request) {
   uint8_t hash[20];
   sha1.final(hash);
   String acceptKey = base64Encode(hash, 20);
-  
   String response = "HTTP/1.1 101 Switching Protocols\r\n";
   response += "Upgrade: websocket\r\n";
   response += "Connection: Upgrade\r\n";
   response += "Sec-WebSocket-Accept: " + acceptKey + "\r\n";
   response += "\r\n";
-  
   wsClient.print(response);
   return true;
 }
@@ -253,7 +244,6 @@ void processWebSocketData() {
   while (wsClient.available() && bufLen < sizeof(buffer)) {
     buffer[bufLen++] = wsClient.read();
   }
-  
   // Dispatch every complete frame in order; newest joystick value wins anyway and CFG messages are never dropped.
   size_t offset = 0;
   while (offset < bufLen) {
@@ -272,14 +262,12 @@ void processWebSocketData() {
       handleWsMessage(message);
     }
   }
-  
   // Keep any trailing partial frame for the next read instead of dropping it
   size_t remaining = (bufLen > offset) ? bufLen - offset : 0;
   if (offset > 0 && remaining > 0) {
     memmove(buffer, buffer + offset, remaining);
   }
   bufLen = remaining;
-  
   if (bufLen >= sizeof(buffer)) bufLen = 0; // Overflow protection
 }
 
@@ -300,7 +288,6 @@ void handleWebSocket() {
       bufLen = 0; // Drop any frame bytes left behind by the previous client
     }
   }
-  
   // Handle handshake
   if (wsClient && wsClient.connected() && !wsConnected) {
     if (wsClient.available()) {
@@ -339,7 +326,6 @@ void handleWebSocket() {
       wsClient.stop(); // Idle pre-handshake connection must not block new clients forever
     }
   }
-  
   // Handle WebSocket frames
   if (wsConnected && wsClient && wsClient.connected()) {
     if (wsClient.available()) {

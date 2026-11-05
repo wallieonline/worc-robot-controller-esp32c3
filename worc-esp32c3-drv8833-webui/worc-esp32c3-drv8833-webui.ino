@@ -86,7 +86,7 @@ void loadSettings() {
   gInvertRight = (ir == 0xFF) ? false : (ir != 0);
   gMixerOn     = (m  == 0xFF) ? true  : (m  != 0);
 }
- 
+
 void saveSettings() {
   EEPROM.write(0, gInvertLeft ? 1 : 0);
   EEPROM.write(1, gInvertRight ? 1 : 0);
@@ -172,7 +172,6 @@ void setup() {
   char ssidBuf[32];
   snprintf(ssidBuf, sizeof(ssidBuf), "WORC-%06X", (uint32_t)(chipid >> 24));
   ssid = ssidBuf;
-
   // Setup WiFi Access Point
   WiFi.mode(WIFI_AP);
   WiFi.setTxPower(WIFI_POWER_13dBm); // Medium power (~20mW)
