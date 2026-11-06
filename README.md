@@ -78,7 +78,7 @@ The easiest way to install the firmware, no Arduino IDE needed:
 1. Open the webflasher in **Chrome or Edge** (WebSerial is required): https://wallieonline.nl/flasher.html
 2. Choose your motor driver (**DRV8833** or **TB6612FNG**) and the firmware variant for your control method.
 3. Connect your ESP32 board via USB (a data cable, some cables are charge only!).
-4. Click **Flash** under your chosen firmware.
+4. Click the **Flash** button under your chosen firmware.
 5. In the popup from your browser, select the USB port and click **Connect**, then click **Install**. Keep the cable connected and this page open until it reaches 100% — done!
 
 More firmware versions will be added to the webflasher soon.
