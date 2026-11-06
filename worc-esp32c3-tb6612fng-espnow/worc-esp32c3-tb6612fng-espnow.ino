@@ -36,6 +36,17 @@
 #define PWMB_OUT_PIN 21
 #define FLED_OUT_PIN 2 // Free GPIO for status LED
 
+// Arduino-ESP32 core 2.x / 3.x compatibility (LEDC PWM API)
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  // Core 3.x
+  #define PWM_WRITE(ch, duty)            ledcWriteChannel(ch, duty)
+  #define PWM_SETUP(pin, ch, freq, res)  ledcAttachChannel(pin, freq, res, ch)
+#else
+  // Core 2.x
+  #define PWM_WRITE(ch, duty)            ledcWrite(ch, duty)
+  #define PWM_SETUP(pin, ch, freq, res)  do { ledcSetup(ch, freq, res); ledcAttachPin(pin, ch); } while (0)
+#endif
+
 // Assign ESPNOW channel struct
 typedef struct rc_data_t {
   uint16_t gAIL;
@@ -136,8 +147,8 @@ void updateMotors() {
     digitalWrite(IN1B_OUT_PIN,LOW);
     digitalWrite(IN2B_OUT_PIN,LOW);
   }
-  ledcWrite(0, abs(gMotorLeft)); // PWMA_OUT_PIN
-  ledcWrite(1, abs(gMotorRight)); // PWMB_OUT_PIN
+  PWM_WRITE(0, abs(gMotorLeft)); // PWMA_OUT_PIN
+  PWM_WRITE(1, abs(gMotorRight)); // PWMB_OUT_PIN
 }
 
 // Pairing mode: listening for a BIND signal (first PAIRING_TIMEOUT_MS after boot, until bound)
@@ -146,7 +157,12 @@ bool isPairing(uint32_t now) {
 }
 
 // Callback function that will be executed when data is received
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+void OnDataRecv(const esp_now_recv_info_t* info, const uint8_t *incomingData, int len) {
+  const uint8_t* mac = info->src_addr;
+#else
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+#endif
   uint32_t current_millis = millis();
   // Bind mode: capture the sender MAC from the callback arguments when the BIND signal is received
   if (isPairing(current_millis)) {
@@ -187,10 +203,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 void setup() {
   Serial.begin(115200);
   //loadSettings(); // Disabled: could pick up stale values already in EEPROM on this board
-  ledcSetup(0, 5000, 8); // ESP only freq = 5000 ledChannel = 0 resolution = 8
-  ledcSetup(1, 5000, 8); // ESP only freq = 5000 ledChannel = 1 resolution = 8
-  ledcAttachPin(PWMA_OUT_PIN, 0); // ESP only ledChannel = 0
-  ledcAttachPin(PWMB_OUT_PIN, 1); // ESP only ledChannel = 1
+  PWM_SETUP(PWMA_OUT_PIN, 0, 5000, 8); // ESP only freq = 5000 ledChannel = 0 resolution = 8
+  PWM_SETUP(PWMB_OUT_PIN, 1, 5000, 8); // ESP only freq = 5000 ledChannel = 1 resolution = 8
   pinMode(IN2A_OUT_PIN,OUTPUT);
   pinMode(IN1A_OUT_PIN,OUTPUT);
   pinMode(STBY_OUT_PIN,OUTPUT);
@@ -211,7 +225,7 @@ void setup() {
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
   esp_wifi_set_ps(WIFI_PS_NONE);
   esp_wifi_start();
-  WiFi.setTxPower(WIFI_POWER_17dBm); // Medium power (~50mW)
+  esp_wifi_set_max_tx_power(52); // 13 dBm (52 x 0.25 dBm) Medium power (~20mW)
   esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE); // Lock the channel (1, 6, or 11 are the non-overlapping ones)
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {

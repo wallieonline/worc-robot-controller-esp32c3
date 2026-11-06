@@ -50,6 +50,17 @@ const char* WS_MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 #define IN2B_OUT_PIN 10  // Right motor IN2
 #define FLED_OUT_PIN 8   // Onboard LED
 
+// Arduino-ESP32 core 2.x / 3.x compatibility (LEDC PWM API)
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  // Core 3.x
+  #define PWM_WRITE(ch, duty)            ledcWriteChannel(ch, duty)
+  #define PWM_SETUP(pin, ch, freq, res)  ledcAttachChannel(pin, freq, res, ch)
+#else
+  // Core 2.x
+  #define PWM_WRITE(ch, duty)            ledcWrite(ch, duty)
+  #define PWM_SETUP(pin, ch, freq, res)  do { ledcSetup(ch, freq, res); ledcAttachPin(pin, ch); } while (0)
+#endif
+
 // Assign mixer values
 int gThrottle = 0;
 int gSteering = 0;
@@ -119,24 +130,24 @@ void updateMotors() {
   if (gInvertLeft) gMotorLeft = -gMotorLeft;
   if (gInvertRight) gMotorRight = -gMotorRight;
   if (gMotorLeft > 0) { // DIRECTION_FORWARD
-    ledcWrite(0, LOW);
-    ledcWrite(1, abs(gMotorLeft));
+    PWM_WRITE(0, LOW);
+    PWM_WRITE(1, abs(gMotorLeft));
   } else if (gMotorLeft < 0) { // DIRECTION_REVERSE
-    ledcWrite(0, abs(gMotorLeft));
-    ledcWrite(1, LOW);
+    PWM_WRITE(0, abs(gMotorLeft));
+    PWM_WRITE(1, LOW);
   } else { // DIRECTION_STOP
-    ledcWrite(0, LOW);
-    ledcWrite(1, LOW);
+    PWM_WRITE(0, LOW);
+    PWM_WRITE(1, LOW);
   }
   if (gMotorRight > 0) { // DIRECTION_FORWARD
-    ledcWrite(2, LOW);
-    ledcWrite(3, abs(gMotorRight));
+    PWM_WRITE(2, LOW);
+    PWM_WRITE(3, abs(gMotorRight));
   } else if (gMotorRight < 0) { // DIRECTION_REVERSE
-    ledcWrite(2, abs(gMotorRight));
-    ledcWrite(3, LOW);
+    PWM_WRITE(2, abs(gMotorRight));
+    PWM_WRITE(3, LOW);
   } else { // DIRECTION_STOP
-    ledcWrite(2, LOW);
-    ledcWrite(3, LOW);
+    PWM_WRITE(2, LOW);
+    PWM_WRITE(3, LOW);
   }
 }
 
@@ -154,14 +165,10 @@ void handleRoot() {
 void setup() {
   Serial.begin(115200);
   loadSettings();
-  ledcSetup(0, 5000, 8); // ESP only freq = 5000 ledChannel = 0 resolution = 8
-  ledcSetup(1, 5000, 8); // ESP only freq = 5000 ledChannel = 1 resolution = 8
-  ledcSetup(2, 5000, 8); // ESP only freq = 5000 ledChannel = 2 resolution = 8
-  ledcSetup(3, 5000, 8); // ESP only freq = 5000 ledChannel = 3 resolution = 8
-  ledcAttachPin(IN1A_OUT_PIN, 0); // ESP only ledChannel = 0
-  ledcAttachPin(IN2A_OUT_PIN, 1); // ESP only ledChannel = 1
-  ledcAttachPin(IN1B_OUT_PIN, 2); // ESP only ledChannel = 2
-  ledcAttachPin(IN2B_OUT_PIN, 3); // ESP only ledChannel = 3
+  PWM_SETUP(IN1A_OUT_PIN, 0, 5000, 8); // ESP only freq = 5000 ledChannel = 0 resolution = 8
+  PWM_SETUP(IN2A_OUT_PIN, 1, 5000, 8); // ESP only freq = 5000 ledChannel = 1 resolution = 8
+  PWM_SETUP(IN1B_OUT_PIN, 2, 5000, 8); // ESP only freq = 5000 ledChannel = 2 resolution = 8
+  PWM_SETUP(IN2B_OUT_PIN, 3, 5000, 8); // ESP only freq = 5000 ledChannel = 3 resolution = 8
   pinMode(STBY_OUT_PIN,OUTPUT);
   pinMode(FLED_OUT_PIN,OUTPUT);
   digitalWrite(STBY_OUT_PIN,LOW);
@@ -174,10 +181,10 @@ void setup() {
   ssid = ssidBuf;
   // Setup WiFi Access Point
   WiFi.mode(WIFI_AP);
-  WiFi.setTxPower(WIFI_POWER_13dBm); // Medium power (~20mW)
   WiFi.setSleep(false); // Disable WiFi modem-sleep: much lower & more consistent latency
   WiFi.softAP(ssid.c_str(), password, 6, 0, 4); // Channel 6, not hidden, max 4 connections
   delay(100); // Small delay to ensure AP is broadcasting
+  WiFi.setTxPower(WIFI_POWER_13dBm); // Medium power (~20mW)
   IPAddress IP = WiFi.softAPIP();
   Serial.printf("WiFi AP started\nSSID: %s\nPassword: %s\nIP Address: %s\n", ssid.c_str(), password, IP.toString().c_str());
   // Setup web server

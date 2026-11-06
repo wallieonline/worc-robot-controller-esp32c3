@@ -34,6 +34,17 @@
 #define IN2B_OUT_PIN 10
 #define FLED_OUT_PIN 8
 
+// Arduino-ESP32 core 2.x / 3.x compatibility (LEDC PWM API)
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  // Core 3.x
+  #define PWM_WRITE(ch, duty)            ledcWriteChannel(ch, duty)
+  #define PWM_SETUP(pin, ch, freq, res)  ledcAttachChannel(pin, freq, res, ch)
+#else
+  // Core 2.x
+  #define PWM_WRITE(ch, duty)            ledcWrite(ch, duty)
+  #define PWM_SETUP(pin, ch, freq, res)  do { ledcSetup(ch, freq, res); ledcAttachPin(pin, ch); } while (0)
+#endif
+
 // Assign ESPNOW channel struct
 typedef struct rc_data_t {
   uint16_t gAIL;
@@ -115,24 +126,24 @@ void updateMotors() {
   if (gInvertLeft) gMotorLeft = -gMotorLeft;
   if (gInvertRight) gMotorRight = -gMotorRight;
   if (gMotorLeft > 0) { // DIRECTION_FORWARD
-    ledcWrite(0, LOW);
-    ledcWrite(1, abs(gMotorLeft));
+    PWM_WRITE(0, LOW);
+    PWM_WRITE(1, abs(gMotorLeft));
   } else if (gMotorLeft < 0) { // DIRECTION_REVERSE
-    ledcWrite(0, abs(gMotorLeft));
-    ledcWrite(1, LOW);
+    PWM_WRITE(0, abs(gMotorLeft));
+    PWM_WRITE(1, LOW);
   } else { // DIRECTION_STOP
-    ledcWrite(0, LOW);
-    ledcWrite(1, LOW);
+    PWM_WRITE(0, LOW);
+    PWM_WRITE(1, LOW);
   }
   if (gMotorRight > 0) { // DIRECTION_FORWARD
-    ledcWrite(2, LOW);
-    ledcWrite(3, abs(gMotorRight));
+    PWM_WRITE(2, LOW);
+    PWM_WRITE(3, abs(gMotorRight));
   } else if (gMotorRight < 0) { // DIRECTION_REVERSE
-    ledcWrite(2, abs(gMotorRight));
-    ledcWrite(3, LOW);
+    PWM_WRITE(2, abs(gMotorRight));
+    PWM_WRITE(3, LOW);
   } else { // DIRECTION_STOP
-    ledcWrite(2, LOW);
-    ledcWrite(3, LOW);
+    PWM_WRITE(2, LOW);
+    PWM_WRITE(3, LOW);
   }
 }
 
@@ -142,7 +153,12 @@ bool isPairing(uint32_t now) {
 }
 
 // Callback function that will be executed when data is received
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+void OnDataRecv(const esp_now_recv_info_t* info, const uint8_t *incomingData, int len) {
+  const uint8_t* mac = info->src_addr;
+#else
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+#endif
   uint32_t current_millis = millis();
   // Bind mode: capture the sender MAC from the callback arguments when the BIND signal is received
   if (isPairing(current_millis)) {
@@ -183,14 +199,10 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 void setup() {
   Serial.begin(115200);
   //loadSettings(); // Disabled: could pick up stale values already in EEPROM on this board
-  ledcSetup(0, 5000, 8); // ESP only freq = 5000 ledChannel = 0 resolution = 8
-  ledcSetup(1, 5000, 8); // ESP only freq = 5000 ledChannel = 1 resolution = 8
-  ledcSetup(2, 5000, 8); // ESP only freq = 5000 ledChannel = 2 resolution = 8
-  ledcSetup(3, 5000, 8); // ESP only freq = 5000 ledChannel = 3 resolution = 8
-  ledcAttachPin(IN1A_OUT_PIN, 0); // ESP only ledChannel = 0
-  ledcAttachPin(IN2A_OUT_PIN, 1); // ESP only ledChannel = 1
-  ledcAttachPin(IN1B_OUT_PIN, 2); // ESP only ledChannel = 2
-  ledcAttachPin(IN2B_OUT_PIN, 3); // ESP only ledChannel = 3
+  PWM_SETUP(IN1A_OUT_PIN, 0, 5000, 8); // ESP only freq = 5000 ledChannel = 0 resolution = 8
+  PWM_SETUP(IN2A_OUT_PIN, 1, 5000, 8); // ESP only freq = 5000 ledChannel = 1 resolution = 8
+  PWM_SETUP(IN1B_OUT_PIN, 2, 5000, 8); // ESP only freq = 5000 ledChannel = 2 resolution = 8
+  PWM_SETUP(IN2B_OUT_PIN, 3, 5000, 8); // ESP only freq = 5000 ledChannel = 3 resolution = 8
   pinMode(STBY_OUT_PIN,OUTPUT);
   pinMode(FLED_OUT_PIN,OUTPUT);
   digitalWrite(STBY_OUT_PIN,LOW); // Keep motor driver in standby during boot
@@ -207,7 +219,7 @@ void setup() {
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
   esp_wifi_set_ps(WIFI_PS_NONE);
   esp_wifi_start();
-  WiFi.setTxPower(WIFI_POWER_17dBm); // Medium power (~50mW)
+  esp_wifi_set_max_tx_power(52); // 13 dBm (52 x 0.25 dBm) Medium power (~20mW)
   esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE); // Lock the channel (1, 6, or 11 are the non-overlapping ones)
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
