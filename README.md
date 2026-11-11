@@ -4,7 +4,7 @@ Firmware for the WORC Robot Controller based on the Espressif ESP32-C3 MCU.
 
 For more information about the project see:<br/>
 https://wallieonline.nl/blogs/worc-robot-controller-en.html<br/>
-https://wallieonline.nl/blogs/esp-now-remote-control-mini-robots.html
+https://wallieonline.nl/blogs/worc-espnow-controller-en.html
 
 ## Control options
 
