@@ -42,6 +42,10 @@
 *.idb
 *.pdb
 
+# New hidden releases
+worc-esp32c3-drv8833-cppm/
+worc-esp32c3-drv8833-webmax/
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd

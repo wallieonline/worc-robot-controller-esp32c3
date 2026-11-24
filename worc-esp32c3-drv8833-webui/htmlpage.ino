@@ -340,6 +340,7 @@ String getHTML() {
       margin-top: 18px;
       color: #555;
       font-size: 0.75rem;
+      text-align: center;
     }
     .footer a {
       color: inherit;
@@ -390,12 +391,12 @@ String getHTML() {
   </div>
 
   <div class="settings">
-    <button class="toggle-btn" id="btnInvertL">Invert Left: OFF</button>
-    <button class="toggle-btn" id="btnInvertR">Invert Right: OFF</button>
+    <button class="toggle-btn" id="btnInvertL">Inv. Left: OFF</button>
+    <button class="toggle-btn" id="btnInvertR">Inv. Right: OFF</button>
     <button class="toggle-btn on" id="btnMixer">Mixer: ON</button>
   </div>
 
-  <div class="value-display" id="values">Throttle: 0 | Steering: 0</div>
+  <div class="value-display" id="values">Thr: 0 | Str: 0</div>
   <div class="telemetry" id="telemetry">Telemetry: --</div>
 
   <div class="footer">WORC Robot Controller<br><a href="https://github.com/wallieonline">© 2026 wallieonline</a></div>
@@ -420,6 +421,7 @@ String getHTML() {
     let mode = 'joystick';
     let lastTlmTime = 0;
     let gotAnyTlm = false;
+    let cfgPending = 0;
 
     // Settings mirrored from the device
     let cfgInvertL = false, cfgInvertR = false, cfgMixer = true;
@@ -440,6 +442,7 @@ String getHTML() {
     function sendConfig() {
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send('CFG,' + (cfgInvertL ? 1 : 0) + ',' + (cfgInvertR ? 1 : 0) + ',' + (cfgMixer ? 1 : 0));
+        cfgPending++;
       }
     }
 
@@ -447,8 +450,8 @@ String getHTML() {
       const bL = document.getElementById('btnInvertL');
       const bR = document.getElementById('btnInvertR');
       const bM = document.getElementById('btnMixer');
-      bL.textContent = 'Invert Left: ' + (cfgInvertL ? 'ON' : 'OFF');
-      bR.textContent = 'Invert Right: ' + (cfgInvertR ? 'ON' : 'OFF');
+      bL.textContent = 'Inv. Left: ' + (cfgInvertL ? 'ON' : 'OFF');
+      bR.textContent = 'Inv. Right: ' + (cfgInvertR ? 'ON' : 'OFF');
       bM.textContent = 'Mixer: ' + (cfgMixer ? 'ON' : 'OFF');
       bL.classList.toggle('on', cfgInvertL);
       bR.classList.toggle('on', cfgInvertR);
@@ -488,10 +491,10 @@ String getHTML() {
     function updateValueDisplay() {
       if (mode === 'tank') {
         valuesDiv.textContent = cfgMixer
-          ? `Throttle: ${tankL} | Steering: ${tankR}`
+          ? `Thr: ${tankL} | Str: ${tankR}`
           : `Left: ${tankL} | Right: ${tankR}`;
       } else {
-        valuesDiv.textContent = `Throttle: ${throttle} | Steering: ${steering}`;
+        valuesDiv.textContent = `Thr: ${throttle} | Str: ${steering}`;
       }
     }
 
@@ -506,6 +509,7 @@ String getHTML() {
         statusDiv.classList.remove('disconnected');
         clearInterval(reconnectInterval);
         gotAnyTlm = false; // reset: only trust the watchdog once real telemetry arrives
+        cfgPending = 1;
         ws.send('CFG?'); // request stored settings
       };
 
@@ -530,6 +534,7 @@ String getHTML() {
           telemetryDiv.textContent =
             `Motor L: ${p[1]} | R: ${p[2]} | Thr: ${p[3]} | Str: ${p[4]} | mixer: ${mixerTxt} | RSSI: ${p[5]} dBm`;
         } else if (msg.startsWith('CFG,')) {
+          if (cfgPending > 0 && --cfgPending > 0) return;
           const p = msg.split(',');
           cfgInvertL = p[1] === '1';
           cfgInvertR = p[2] === '1';
@@ -663,6 +668,11 @@ String getHTML() {
       }
 
       function setOffset(px) {
+        if (el.clientHeight === 0) { // hidden: no size to measure, let the CSS centre the handle
+          handle.style.left = handle.style.top = '';
+          s.value = 0; onValue(0);
+          return;
+        }
         const t = travel();
         px = Math.max(-t, Math.min(t, px));
         if (Math.abs(px) < 8) px = 0; // deadzone
